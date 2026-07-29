@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#b3350a">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Toulouse Fires">
+<title>Toulouse Wildfire Tracker</title>
+<style>
+  html{color-scheme:light;background:#fffdf7;}
+  :root{
+    --ink:#000000;
+    --paper:#fff7d6;
+    --card:#ffffff;
+    --ember:#b3350a;
+    --ember-dim:#7a2400;
+    --smoke:#2e2a24;
+    --line:#8a8168;
+    --green:#2c4a2c;
+    --amber:#8a6300;
+    --red:#8f1c16;
+    --red-tint:#ffd9d4;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background-color:var(--paper);
+    color:var(--ink);
+    font-family:'Iowan Old Style','Georgia',serif;
+    line-height:1.55;
+    font-size:16px;
+  }
+  .mono{font-family:'SF Mono','Courier New',monospace;}
+  header{
+    padding:28px 20px 20px;
+    border-bottom:4px solid var(--ink);
+    background-color:var(--paper);
+  }
+  .eyebrow{
+    font-family:'SF Mono','Courier New',monospace;
+    font-size:11px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--ember);
+    margin-bottom:6px;
+  }
+  h1{
+    margin:0 0 10px;
+    font-size:clamp(28px,7vw,42px);
+    font-weight:700;
+    letter-spacing:-0.5px;
+  }
+  .tripbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    font-family:'SF Mono','Courier New',monospace;
+    font-size:12px;
+    color:var(--smoke);
+  }
+  .tripbar strong{color:var(--ink);}
+  main{max-width:760px;margin:0 auto;padding:24px 20px 60px;}
+  section{margin-bottom:40px;}
+  .sec-label{
+    font-family:'SF Mono','Courier New',monospace;
+    font-size:11px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--ember-dim);
+    border-bottom:1px solid var(--line);
+    padding-bottom:8px;
+    margin-bottom:16px;
+    display:flex;
+    justify-content:space-between;
+  }
+  .status-band{
+    border:3px solid var(--red);
+    background-color:var(--red-tint);
+    padding:16px 18px;
+    border-radius:2px;
+    margin-bottom:36px;
+  }
+  .status-band .level{
+    font-family:'SF Mono','Courier New',monospace;
+    font-weight:700;
+    color:var(--red);
+    letter-spacing:1px;
+    font-size:13px;
+  }
+  .status-band p{margin:8px 0 0;font-size:15.5px;color:var(--ink);}
+  .maps-grid{display:grid;grid-template-columns:1fr;gap:12px;}
+  @media(min-width:600px){.maps-grid{grid-template-columns:1fr 1fr;}}
+  .map-card{
+    border:2px solid var(--ink);
+    background-color:var(--card);
+    padding:16px;
+    text-decoration:none;
+    color:var(--ink);
+    display:block;
+    position:relative;
+    transition:transform .15s ease;
+  }
+  .map-card:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink);}
+  .map-card .tag{
+    font-family:'SF Mono','Courier New',monospace;
+    font-size:10px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--ember-dim);
+    font-weight:700;
+  }
+  .map-card h3{margin:6px 0 6px;font-size:17px;}
+  .map-card p{margin:0;font-size:13.5px;color:var(--smoke);}
+  .map-card .go{
+    position:absolute;top:14px;right:14px;
+    font-family:'SF Mono','Courier New',monospace;
+    font-size:11px;
+  }
+  .rundown-entry{
+    border-left:3px solid var(--ember);
+    padding:4px 0 4px 16px;
+    margin-bottom:22px;
+  }
+  .rundown-entry .date{
+    font-family:'SF Mono','Courier New',monospace;
+    font-size:12px;
+    color:var(--ember-dim);
+    letter-spacing:1px;
+    margin-bottom:4px;
+  }
+  .rundown-entry h4{margin:0 0 6px;font-size:16px;}
+  .rundown-entry p{margin:0 0 6px;font-size:14.5px;}
+  .rundown-entry ul{margin:6px 0 0;padding-left:18px;font-size:14px;}
+  .placeholder{
+    border:1px dashed var(--line);
+    padding:16px;
+    font-family:'SF Mono','Courier New',monospace;
+    font-size:12.5px;
+    color:var(--smoke);
+    text-align:center;
+  }
+  .news-list{list-style:none;margin:0;padding:0;}
+  .news-list li{
+    padding:12px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .news-list a{color:var(--ink);font-weight:700;text-decoration:none;font-size:15px;}
+  .news-list a:hover{color:var(--ember);}
+  .news-list .src{
+    font-family:'SF Mono','Courier New',monospace;
+    font-size:10.5px;
+    color:var(--ember);
+    text-transform:uppercase;
+    letter-spacing:1px;
+    display:block;
+    margin-bottom:3px;
+  }
+  .news-list p{margin:6px 0 0;font-size:13.5px;color:var(--smoke);}
+  footer{
+    max-width:760px;margin:0 auto;padding:0 20px 50px;
+    font-size:12.5px;color:var(--smoke);
+  }
+  #offline-banner{
+    display:none;
+    background-color:#4a1410;
+    color:#ffffff;
+    padding:12px 20px;
+    font-family:'SF Mono','Courier New',monospace;
+    font-size:13px;
+    font-weight:700;
+    text-align:center;
+    line-height:1.4;
+  }
+  #offline-banner.show{display:block;}
+  #age{
+    font-family:'SF Mono','Courier New',monospace;
+    font-weight:700;
+    padding:2px 8px;
+    border-radius:2px;
+  }
+  #age.fresh{background-color:#d8f0d8;color:#1d3a1d;}
+  #age.aging{background-color:#ffe9b0;color:#5a4200;}
+  #age.stale{background-color:#8f1c16;color:#ffffff;}
+  footer .how{
+    border-top:1px solid var(--line);
+    padding-top:16px;
+  }
+</style>
+</head>
+<body>
+
+<div id="offline-banner">
+  ⚠ OFFLINE — showing a saved copy. Fire conditions may have changed.
+  In an emergency call 112.
+</div>
+
+<header>
+  <div class="eyebrow">Fire Watch · Occitanie / Haute-Garonne</div>
+  <h1>Toulouse Wildfire Tracker</h1>
+  <div class="tripbar">
+    <span>Headlines auto-updated: <strong><!--STAMP_START-->pending first build<!--STAMP_END--></strong></span>
+    <span id="age" data-built="">&nbsp;</span>
+  </div>
+</header>
+
+<main>
+
+  <section class="status-band">
+    <div class="level">● TOULOUSE: ORANGE TODAY, RESTRICTIONS STILL ACTIVE — GIRONDE FIRE NOW SEVERE</div>
+    <p>Toulouse's daily fire-danger eased to orange ("élevé") for Wednesday 29 July, down from red, but the préfecture's ban on open flames and spark-risk equipment (12:00–20:00, through 1 September) still applies regardless of the daily colour. Small fires have popped up in and around Toulouse this week and been contained quickly. The bigger story is the Gironde fire near Bordeaux, which has grown to roughly 42,000 hectares with about 220,000 people evacuated at peak — one of the largest evacuations in French history — though it's still well over 200 km from Toulouse. A new heatwave peaking around Saturday 1 Aug could push Toulouse back to red over the coming weekend.</p>
+  </section>
+
+  <section>
+    <div class="sec-label">Live official maps <span>open in new tab</span></div>
+    <div class="maps-grid">
+      <a class="map-card" href="https://meteofrance.com/meteo-des-forets" target="_blank" rel="noopener">
+        <span class="go">↗</span>
+        <span class="tag">Official · Daily</span>
+        <h3>Météo-France — Météo des forêts</h3>
+        <p>The authoritative daily/next-day fire-danger map by department (faible → extrême). This is the source the préfecture's red-alert triggers are based on.</p>
+      </a>
+      <a class="map-card" href="https://forest-fire.emergency.copernicus.eu/applications" target="_blank" rel="noopener">
+        <span class="go">↗</span>
+        <span class="tag">Satellite · Near-live</span>
+        <h3>EFFIS / Copernicus</h3>
+        <p>EU satellite fire-detection map — shows actual active hotspots and burned-area extent, updated through the day, not just risk level.</p>
+      </a>
+      <a class="map-card" href="https://www.haute-garonne.gouv.fr/Actualites/Risque-de-feux-de-foret-de-niveau-tres-eleve" target="_blank" rel="noopener">
+        <span class="go">↗</span>
+        <span class="tag">Préfecture 31</span>
+        <h3>Préfecture de la Haute-Garonne</h3>
+        <p>Local prefectural orders, restrictions, and department-specific announcements as they're issued.</p>
+      </a>
+      <a class="map-card" href="https://www.pompiers.fr/actualites" target="_blank" rel="noopener">
+        <span class="go">↗</span>
+        <span class="tag">SDIS 31 / Sapeurs-pompiers</span>
+        <h3>Fire & rescue updates</h3>
+        <p>Ground-level incident reports from France's fire services — best source for any fire actually breaking out near Toulouse.</p>
+      </a>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-label">Noon rundown <span>English, daily</span></div>
+
+    <div class="rundown-entry">
+      <div class="date mono">WED 29 JUL — 12:00</div>
+      <h4>Status: Small fires in and around Toulouse, contained; Gironde fire now much larger and 15 km from Bordeaux</h4>
+      <p>Haute-Garonne's daily fire-danger actually eased slightly today — Toulouse itself is at orange ("élevé") rather than yesterday's red, though the préfecture's restriction order (no open flames, no spark-risk machinery 12:00–20:00) stays in force regardless. That said, several small fires have flared in the department in the last day: one broke out inside Toulouse itself and was brought under control and extinguished by evening; another was reported near Arnaud-Guilhem, between Saint-Gaudens and Toulouse, with fire crews engaged; scattered brush fires were also logged this week in Escalquens, Merville, Montgaillard, and Avignonet-Lauragais near the A61 — all local and dealt with quickly, not large blazes.</p>
+      <ul>
+        <li>Gironde (Bordeaux area): the fire has grown sharply — now around 42,000 hectares burned, roughly 220,000 people evacuated at peak, one of the largest evacuations in French history. Flames reached about 15 km from Bordeaux near Martignas-sur-Jalle; the mayor says evacuating the city itself isn't currently planned. Two firefighters died battling the blaze near Mérignac.</li>
+        <li>A military A400M aircraft, converted into a water bomber carrying 20 tonnes of retardant, has been deployed to reinforce firefighting efforts.</li>
+        <li>Nationally: over 12,500 fire starts and roughly 44,000 hectares burned since January 2026 — already worse than the severe 2022 season.</li>
+        <li>A new heatwave is still forecast to peak around Saturday 1 Aug, which could push Toulouse's risk back up to red.</li>
+      </ul>
+    </div>
+
+    <div class="rundown-entry">
+      <div class="date mono">TUE 28 JUL — 12:00</div>
+      <h4>Status: Elevated risk, no fire in Haute-Garonne, watching the heatwave</h4>
+      <p>Haute-Garonne remains under red fire-danger vigilance but has no active blaze. The department's attention is on a new heatwave arriving from Tuesday, forecast to push temperatures to 37–40°C between Toulouse and the Aquitaine basin, peaking around Saturday 1 Aug.</p>
+      <ul>
+        <li>Gironde (Bordeaux area): ~420 km² burned, holding steady overnight; ~4,000 evacuated from Atlantic coast tourist sites (Cap Ferret/Le Porge); A63 highway partly closed.</li>
+        <li>Landes: separate fire now "fixed" (contained), evacuees returning home.</li>
+        <li>Aude/Hérault: ~900 hectares burned near the Spanish border, contained but active earlier in July.</li>
+        <li>Nationally: ~115,000 hectares burned in France so far in 2026; military A400M aircraft now being used as air tankers.</li>
+      </ul>
+    </div>
+
+    <div class="placeholder">
+      Entries above are written by hand and dated. The auto-updating headline feed is further down the page.
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-label">Latest headlines <span>auto-updated daily</span></div>
+    <!--FEED_START-->
+    <ul class="news-list"><li><p>Headlines appear here after the first build runs.</p></li></ul>
+    <!--FEED_END-->
+  </section>
+
+</main>
+
+<footer>
+  <div class="how">
+    <strong>How this page works.</strong> The <em>Latest headlines</em> section rebuilds automatically every day at 12:00 Paris time and is always current. The <em>Noon rundown</em> above it is written by hand and carries its own date — check that date before relying on it. The four official map links are always live: for anything urgent, open those first, they are the authoritative sources.
+    <br><br>
+    <strong>In an emergency in France, call 112</strong> (or 18 for the fire service). This page is an informal summary, not an official warning system.
+  </div>
+</footer>
+
+<script>
+  // Show how old this page is, every time it is opened. A parent checking
+  // during an incident must be able to see at a glance whether they are
+  // looking at current information or at this morning's.
+  (function () {
+    var el = document.getElementById('age');
+    var built = el.getAttribute('data-built');
+    if (!built) { el.textContent = ''; return; }
+
+    var hours = (Date.now() - new Date(built).getTime()) / 3600000;
+    var label;
+
+    if (hours < 1)       label = 'updated just now';
+    else if (hours < 2)  label = 'updated 1 hour ago';
+    else if (hours < 24) label = 'updated ' + Math.floor(hours) + ' hours ago';
+    else {
+      var d = Math.floor(hours / 24);
+      label = 'updated ' + d + (d === 1 ? ' day ago' : ' days ago');
+    }
+
+    el.textContent = label;
+    el.className = hours < 6 ? 'fresh' : (hours < 18 ? 'aging' : 'stale');
+    if (hours >= 18) el.textContent = '⚠ ' + label + ' — check official maps';
+  })();
+
+  // Register the service worker so the page can be installed and opened offline.
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function (err) {
+        console.warn('Service worker registration failed:', err);
+      });
+    });
+  }
+
+  // Show a warning whenever the device is offline. Fire information that
+  // cannot be refreshed should never look authoritative.
+  var banner = document.getElementById('offline-banner');
+  function syncBanner() {
+    banner.classList.toggle('show', !navigator.onLine);
+  }
+  window.addEventListener('online', syncBanner);
+  window.addEventListener('offline', syncBanner);
+  syncBanner();
+</script>
+
+</body>
+</html>
