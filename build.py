@@ -130,19 +130,20 @@ def fetch_risk_level():
     Endpoint confirmed from the Meteo-France API portal (DonneesPubliquesMeteoForets,
     v1): GET /carte/departement/encours on host
     https://public-api.meteofrance.fr/public/DPMeteoForets/v1
-    Returns the current departmental map as CSV or JSON.
 
-    Requires a free Meteo-France API key in the METEOFRANCE_API_KEY env var
-    (set as a GitHub Actions secret). Without a key this returns None and the
-    page falls back to showing "level not confirmed today" -- correct
-    behaviour, not a failure. Never guess a level: a wrong level is worse
-    than an absent one.
+    Confirmed response shape (from a live call, 31 Jul 2026): a flat JSON list,
+    one row per department, with fields:
+        reference_time  -- ISO timestamp the whole bulletin was issued
+        dep_code        -- two-digit department code, e.g. '31'
+        dep_nom         -- department name, e.g. 'Haute-Garonne'
+        niveau_j1       -- danger level (1-4) for the day AFTER reference_time
+        niveau_j2       -- danger level (1-4) for two days after reference_time
+    There is no per-row date -- J1/J2 are relative to reference_time, so the
+    date each level applies to has to be computed here.
 
-    NOTE: the exact response shape (JSON field names, or CSV-only) was not
-    verified against a live call while writing this -- only the endpoint path
-    and general product description were available. Check the first Action
-    run's log; if parsing fails it will say so explicitly, and the field
-    names/parsing below are the first thing to adjust.
+    Requires a free Meteo-France API key in the METEOFRANCE_API_KEY env var.
+    Without a key, or if nothing matches today exactly, returns (None, None)
+    and the page shows the level as unconfirmed -- never guessed.
     """
     import os
     key = os.environ.get("METEOFRANCE_API_KEY", "").strip()
@@ -161,68 +162,60 @@ def fetch_risk_level():
         print(f"  ! risk level fetch failed: {e}")
         return None, None
 
-    today = datetime.now(timezone(timedelta(hours=2))).date().isoformat()
+    today = datetime.now(timezone(timedelta(hours=2))).date()
 
-    # Try JSON first; fall back to CSV if the API only returns that format
-    # regardless of the query parameter.
-    rows = None
     try:
         import json
-        parsed = json.loads(raw)
-        rows = parsed if isinstance(parsed, list) else parsed.get("data", parsed.get("features", []))
-    except Exception:
-        try:
-            import csv, io
-            text = raw.decode("utf-8-sig", errors="replace")
-            delim = ";" if text.count(";") > text.count(",") else ","
-            rows = list(csv.DictReader(io.StringIO(text), delimiter=delim))
-        except Exception as e:
-            print(f"  ! risk level response unreadable as JSON or CSV: {e}")
-            return None, None
+        rows = json.loads(raw)
+        if not isinstance(rows, list):
+            rows = rows.get("data", rows.get("features", []))
+    except Exception as e:
+        print(f"  ! risk level response unreadable as JSON: {e}")
+        return None, None
 
     if not rows:
         print("  ! risk level response had no rows")
         return None, None
 
-    print(f"  i risk level: got {len(rows)} row(s), first row keys/sample:")
-    first = rows[0]
-    first_props = first.get("properties", first) if isinstance(first, dict) else first
-    if isinstance(first_props, dict):
-        for k, v in list(first_props.items())[:12]:
-            print(f"      {k!r}: {v!r}")
-    else:
-        print(f"      (non-dict row) {first_props!r}"[:300])
-
-    def get_field(row, *names):
-        for n in names:
-            for k in row.keys():
-                if k.lower().replace(" ", "").replace("_", "") == n:
-                    return row[k]
-        return None
-
     for row in rows:
-        props = row.get("properties", row) if isinstance(row, dict) else row
-        dept = get_field(props, "departement", "coddep", "codedepartement", "insee", "dep")
-        if dept is None:
-            continue
-        if str(dept).strip().lstrip("0") not in ("31",):
+        if str(row.get("dep_code", "")).strip().lstrip("0") != "31":
             continue
 
-        date_val = get_field(props, "date", "datej1", "jour")
-        lvl_val = get_field(props, "niveau", "niveaudanger", "niveauj1", "level", "danger")
-        print(f"  i dept-31 row found: date_field={date_val!r} level_field={lvl_val!r} (today={today})")
+        ref_raw = row.get("reference_time")
+        try:
+            ref_date = datetime.fromisoformat(str(ref_raw).replace("Z", "+00:00")).date()
+        except Exception:
+            print(f"  ! risk level: unparseable reference_time {ref_raw!r}")
+            return None, None
 
-        date_str = str(date_val)[:10] if date_val else None
+        j1_date = ref_date + timedelta(days=1)
+        j2_date = ref_date + timedelta(days=2)
+        print(f"  i dept 31 bulletin issued {ref_date}: "
+              f"J1={j1_date} niveau={row.get('niveau_j1')!r}, "
+              f"J2={j2_date} niveau={row.get('niveau_j2')!r} (today={today})")
+
+        if j1_date == today:
+            lvl_val = row.get("niveau_j1")
+        elif j2_date == today:
+            lvl_val = row.get("niveau_j2")
+        else:
+            print("  i no bulletin day (J1/J2) matches today - left unconfirmed")
+            return None, None
+
         try:
             lvl = int(lvl_val)
         except (TypeError, ValueError):
-            continue
+            print(f"  ! risk level: non-numeric level value {lvl_val!r}")
+            return None, None
 
-        if date_str == today and 1 <= lvl <= 4:
+        if 1 <= lvl <= 4:
             print(f"  + risk level for dept 31, {today}: {lvl}")
-            return today, lvl
+            return today.isoformat(), lvl
 
-    print("  i no matching dept-31 row for today - left unconfirmed")
+        print(f"  ! risk level: value {lvl} out of expected 1-4 range")
+        return None, None
+
+    print("  ! dept-31 row not found in response - left unconfirmed")
     return None, None
 
 
