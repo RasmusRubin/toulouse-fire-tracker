@@ -1,0 +1,56 @@
+name: Update fire tracker
+
+on:
+  schedule:
+    # Fire data + headlines: every 3 hours, 06:00-21:00 Paris (CEST = UTC+2).
+    # After late October (CET = UTC+1) shift each hour up by one:
+    #   '0 5,8,11,14,17,20 * * *'
+    - cron: '0 4,7,10,13,16,19 * * *'
+    # Flight tracker: tighter interval on just the two travel days, so status
+    # is close to live without burning API quota on the days between.
+    # (build.py itself also date-gates the flight fetch as a second safety net.)
+    - cron: '*/20 4-22 31 7 *'   # outbound day
+    - cron: '*/20 4-22 8 8 *'    # homebound day
+  workflow_dispatch:   # lets you trigger a rebuild by hand from the Actions tab
+
+permissions:
+  contents: write
+
+# Never let two runs commit at once; a queued run just waits its turn.
+concurrency:
+  group: fire-tracker-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Rebuild page
+        env:
+          # Both optional. If a secret is not set, build.py skips that lookup
+          # and the relevant part of the page shows its honest "not confirmed"
+          # state rather than guessing. Nothing breaks either way.
+          METEOFRANCE_API_KEY: ${{ secrets.METEOFRANCE_API_KEY }}
+          AERODATABOX_API_KEY: ${{ secrets.AERODATABOX_API_KEY }}
+        run: python build.py
+
+      - name: Commit if changed
+        run: |
+          git config user.name  "fire-tracker-bot"
+          git config user.email "actions@github.com"
+          git add index.html
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Update: $(date -u '+%Y-%m-%d %H:%M UTC')"
+            git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+            git push
+          fi
