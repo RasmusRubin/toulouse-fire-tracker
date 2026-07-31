@@ -1,342 +1,514 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en" style="color-scheme:light"><head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#b3350a">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Toulouse Fires">
+<meta name="theme-color" content="#ae1800">
+<meta name="description" content="Wildfire and fire-danger tracker for Toulouse and Haute-Garonne, France. Official maps, hand-written field notes, and an automated headline feed.">
 <title>Toulouse Wildfire Tracker</title>
+
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
-  html{color-scheme:light;background:#fffdf7;}
-  :root{
-    --ink:#000000;
-    --paper:#fff7d6;
+  /* latin-ext */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("5c9689d0-a5f0-444b-b556-2fa5177bfabe") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("5c9689d0-a5f0-444b-b556-2fa5177bfabe") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("5c9689d0-a5f0-444b-b556-2fa5177bfabe") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("5c9689d0-a5f0-444b-b556-2fa5177bfabe") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 800;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("5c9689d0-a5f0-444b-b556-2fa5177bfabe") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+:root{
+    --ink:#201e1d;
+    --paper:#f3f2f2;
+    --surface:#eae9e9;
     --card:#ffffff;
-    --ember:#b3350a;
-    --ember-dim:#7a2400;
-    --smoke:#2e2a24;
-    --line:#8a8168;
-    --green:#2c4a2c;
-    --amber:#8a6300;
-    --red:#8f1c16;
-    --red-tint:#ffd9d4;
+    --divider:#c7c3c3;
+    --divider-strong:#201e1d;
+
+    --accent:#ec3013;
+    --accent-100:#fff2ef;
+    --accent-200:#ffe0d9;
+    --accent-600:#dd2b0f;
+    --accent-700:#ae1800;
+    --accent-800:#7c1405;
+    --accent-900:#4d170e;
+
+    --neutral-100:#f8f4f4;
+    --neutral-200:#eae7e7;
+    --neutral-300:#d7d3d3;
+    --neutral-600:#7d7979;
+    --neutral-700:#605d5d;
+    --neutral-800:#444141;
+    --neutral-900:#2d2b2b;
+
+    --risk-faible:#0d5c1f;
+    --risk-faible-bg:#4caf3f;
+    --risk-modere:#5c5300;
+    --risk-modere-bg:#f5e600;
+    --risk-eleve:#7a3a00;
+    --risk-eleve-bg:#f28c00;
+    --risk-tres-eleve:#ffffff;
+    --risk-tres-eleve-bg:#a80000;
+
+    --font: "Archivo", "Helvetica Neue", Arial, sans-serif;
   }
-  *{box-sizing:border-box;}
+
+  *,*::before,*::after{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
   body{
-    margin:0;
-    background-color:var(--paper);
-    color:var(--ink);
-    font-family:'Iowan Old Style','Georgia',serif;
-    line-height:1.55;
-    font-size:16px;
+    background:var(--paper); color:var(--ink); font-family:var(--font);
+    font-size:16px; line-height:1.5; font-weight:400;
+    -webkit-text-size-adjust:100%;
   }
-  .mono{font-family:'SF Mono','Courier New',monospace;}
-  header{
-    padding:28px 20px 20px;
-    border-bottom:4px solid var(--ink);
-    background-color:var(--paper);
-  }
-  .eyebrow{
-    font-family:'SF Mono','Courier New',monospace;
-    font-size:11px;
-    letter-spacing:2px;
-    text-transform:uppercase;
-    color:var(--ember);
-    margin-bottom:6px;
-  }
-  h1{
-    margin:0 0 10px;
-    font-size:clamp(28px,7vw,42px);
-    font-weight:700;
-    letter-spacing:-0.5px;
-  }
-  .tripbar{
-    display:flex;
-    flex-wrap:wrap;
-    gap:14px;
-    font-family:'SF Mono','Courier New',monospace;
-    font-size:12px;
-    color:var(--smoke);
-  }
-  .tripbar strong{color:var(--ink);}
-  main{max-width:760px;margin:0 auto;padding:24px 20px 60px;}
-  section{margin-bottom:40px;}
-  .sec-label{
-    font-family:'SF Mono','Courier New',monospace;
-    font-size:11px;
-    letter-spacing:2px;
-    text-transform:uppercase;
-    color:var(--ember-dim);
-    border-bottom:1px solid var(--line);
-    padding-bottom:8px;
-    margin-bottom:16px;
-    display:flex;
-    justify-content:space-between;
-  }
-  .status-band{
-    border:3px solid var(--red);
-    background-color:var(--red-tint);
-    padding:16px 18px;
-    border-radius:2px;
-    margin-bottom:36px;
-  }
-  .status-band .level{
-    font-family:'SF Mono','Courier New',monospace;
-    font-weight:700;
-    color:var(--red);
-    letter-spacing:1px;
-    font-size:13px;
-  }
-  .status-band p{margin:8px 0 0;font-size:15.5px;color:var(--ink);}
-  .maps-grid{display:grid;grid-template-columns:1fr;gap:12px;}
-  @media(min-width:600px){.maps-grid{grid-template-columns:1fr 1fr;}}
-  .map-card{
-    border:2px solid var(--ink);
-    background-color:var(--card);
-    padding:16px;
-    text-decoration:none;
-    color:var(--ink);
-    display:block;
-    position:relative;
-    transition:transform .15s ease;
-  }
-  .map-card:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink);}
-  .map-card .tag{
-    font-family:'SF Mono','Courier New',monospace;
-    font-size:10px;
-    letter-spacing:1px;
-    text-transform:uppercase;
-    color:var(--ember-dim);
-    font-weight:700;
-  }
-  .map-card h3{margin:6px 0 6px;font-size:17px;}
-  .map-card p{margin:0;font-size:13.5px;color:var(--smoke);}
-  .map-card .go{
-    position:absolute;top:14px;right:14px;
-    font-family:'SF Mono','Courier New',monospace;
-    font-size:11px;
-  }
-  .rundown-entry{
-    border-left:3px solid var(--ember);
-    padding:4px 0 4px 16px;
-    margin-bottom:22px;
-  }
-  .rundown-entry .date{
-    font-family:'SF Mono','Courier New',monospace;
-    font-size:12px;
-    color:var(--ember-dim);
-    letter-spacing:1px;
-    margin-bottom:4px;
-  }
-  .rundown-entry h4{margin:0 0 6px;font-size:16px;}
-  .rundown-entry p{margin:0 0 6px;font-size:14.5px;}
-  .rundown-entry ul{margin:6px 0 0;padding-left:18px;font-size:14px;}
-  .placeholder{
-    border:1px dashed var(--line);
-    padding:16px;
-    font-family:'SF Mono','Courier New',monospace;
-    font-size:12.5px;
-    color:var(--smoke);
-    text-align:center;
-  }
-  .news-list{list-style:none;margin:0;padding:0;}
-  .news-list li{
-    padding:12px 0;
-    border-bottom:1px solid var(--line);
-  }
-  .news-list a{color:var(--ink);font-weight:700;text-decoration:none;font-size:15px;}
-  .news-list a:hover{color:var(--ember);}
-  .news-list .src{
-    font-family:'SF Mono','Courier New',monospace;
-    font-size:10.5px;
-    color:var(--ember);
-    text-transform:uppercase;
-    letter-spacing:1px;
-    display:block;
-    margin-bottom:3px;
-  }
-  .news-list p{margin:6px 0 0;font-size:13.5px;color:var(--smoke);}
-  footer{
-    max-width:760px;margin:0 auto;padding:0 20px 50px;
-    font-size:12.5px;color:var(--smoke);
-  }
+  h1,h2,h3,h4,h5,h6{ font-family:var(--font); font-weight:800; line-height:1.12; letter-spacing:-0.015em; margin:0; }
+  p{ margin:0; }
+  a{ color:var(--accent-700); text-underline-offset:3px; }
+  a:hover{ color:var(--accent-900); }
+  a:focus-visible, button:focus-visible, details:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  ::selection{ background:var(--accent-200); }
+  ul{ margin:0; padding:0; list-style:none; }
+
+  .wrap{ max-width:760px; margin:0 auto; padding:0 20px; }
+
+  /* — offline banner — */
   #offline-banner{
-    display:none;
-    background-color:#4a1410;
-    color:#ffffff;
-    padding:12px 20px;
-    font-family:'SF Mono','Courier New',monospace;
-    font-size:13px;
-    font-weight:700;
-    text-align:center;
-    line-height:1.4;
+    display:none; position:sticky; top:0; z-index:50;
+    background:var(--neutral-900); color:#fff;
+    border-bottom:2px solid var(--accent);
   }
-  #offline-banner.show{display:block;}
-  #age{
-    font-family:'SF Mono','Courier New',monospace;
-    font-weight:700;
-    padding:2px 8px;
-    border-radius:2px;
+  #offline-banner.show{ display:block; }
+  #offline-banner .inner{ max-width:760px; margin:0 auto; padding:12px 20px; font-size:14px; font-weight:600; }
+  #offline-banner .sub{ font-weight:400; opacity:0.85; margin-top:2px; font-size:13px; }
+
+  /* — header — */
+  header.site{ border-bottom:2px solid var(--divider-strong); background:var(--paper); }
+  .header-inner{ padding:28px 20px 20px; }
+  .eyebrow{
+    display:inline-block; font-size:11px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--accent-700); margin-bottom:10px;
   }
-  #age.fresh{background-color:#d8f0d8;color:#1d3a1d;}
-  #age.aging{background-color:#ffe9b0;color:#5a4200;}
-  #age.stale{background-color:#8f1c16;color:#ffffff;}
-  footer .how{
-    border-top:1px solid var(--line);
-    padding-top:16px;
+  h1.title{ font-size:34px; margin-bottom:16px; }
+  .tripbar{
+    display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px;
+    padding-top:14px; border-top:1px solid var(--divider); font-size:13px; color:var(--neutral-700);
+  }
+  .stamp{ font-weight:600; color:var(--ink); }
+  .chip{
+    display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700;
+    padding:4px 10px; border:1px solid var(--divider-strong);
+    white-space:nowrap; flex:none;
+  }
+  .chip .dot{ width:8px; height:8px; border-radius:50%; flex:none; }
+  .chip.fresh{ background:var(--neutral-100); color:var(--ink); border-color:var(--divider-strong); }
+  .chip.fresh .dot{ background:#2f6b1f; }
+  .chip.aging{ background:var(--risk-modere-bg); color:var(--risk-modere); border-color:var(--risk-modere); }
+  .chip.aging .dot{ background:var(--risk-modere); }
+  .chip.stale{ background:var(--accent-800); color:#fff; border-color:var(--accent-800); }
+  .chip.stale .dot{ background:#fff; }
+
+  /* — sections — */
+  section{ padding:28px 0; border-bottom:2px solid var(--divider-strong); }
+  section.plain-rule{ border-bottom:1px solid var(--divider); }
+  .section-head{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+  h2.section-title{ font-size:13px; letter-spacing:0.08em; text-transform:uppercase; }
+  .section-tag{
+    font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase;
+    padding:3px 8px; white-space:nowrap;
+  }
+  .tag-auto{ background:var(--neutral-100); color:var(--neutral-700); border:1px solid var(--divider); }
+  .tag-manual{ background:var(--accent-100); color:var(--accent-800); border:1px solid var(--accent-200); }
+
+  /* — status band — */
+  .status-band{ background:var(--surface); border:2px solid var(--divider-strong); padding:20px; }
+  .status-restriction{
+    display:flex; gap:10px; align-items:flex-start; background:var(--ink); color:#fff;
+    padding:12px 14px; font-size:13px; font-weight:600; margin-bottom:18px;
+  }
+  .status-restriction .mark{ color:var(--accent-300, #ffc4b8); flex:none; }
+  .risk-scale{ display:flex; gap:3px; margin-bottom:10px; }
+  .risk-seg{
+    flex:1; padding:8px 4px 6px; text-align:center; font-size:11px; font-weight:700;
+    letter-spacing:0.02em; text-transform:uppercase; position:relative; border:1px solid var(--divider-strong);
+  }
+  .risk-seg .fr{ display:block; font-size:9px; font-weight:600; text-transform:none; opacity:0.75; margin-top:1px; }
+  .risk-seg.today{ box-shadow:inset 0 0 0 3px var(--ink); }
+  .risk-scale.unconfirmed .risk-seg{ opacity:0.32; filter:grayscale(0.65); }
+  .risk-notice{ font-size:13px; font-weight:700; margin-bottom:10px; }
+  .risk-notice.stale{
+    background:var(--accent-800); color:#fff; padding:10px 12px;
+    display:block; line-height:1.45;
+  }
+  .risk-notice.stale a{ color:#fff; }
+  .risk-notice.ok{ color:var(--neutral-700); font-weight:600; }
+  .risk-seg .pointer{
+    position:absolute; top:-11px; left:50%; transform:translateX(-50%);
+    font-size:10px; font-weight:800; letter-spacing:0.04em; text-transform:uppercase;
+    background:var(--ink); color:#fff; padding:1px 6px; white-space:nowrap;
+  }
+  .status-headline{ font-size:22px; margin:14px 0 8px; }
+  .status-lede{ font-size:14px; color:var(--neutral-700); margin-bottom:2px; }
+  details.status-detail{ margin-top:12px; }
+  details.status-detail summary{
+    cursor:pointer; font-size:13px; font-weight:700; color:var(--accent-700);
+    list-style:none; display:flex; align-items:center; gap:6px;
+  }
+  details.status-detail summary::-webkit-details-marker{ display:none; }
+  details.status-detail summary::before{ content:"+"; font-size:16px; line-height:1; }
+  details.status-detail[open] summary::before{ content:"–"; }
+  details.status-detail .detail-body{ font-size:14px; line-height:1.6; padding-top:10px; color:var(--ink); }
+
+  /* — map cards — */
+  .map-grid{ display:grid; grid-template-columns:1fr 1fr; gap:2px; background:var(--divider-strong); border:2px solid var(--divider-strong); }
+  .map-card{
+    background:var(--card); padding:18px; display:flex; flex-direction:column; gap:8px;
+    text-decoration:none; color:var(--ink); min-height:150px;
+  }
+  .map-card:hover{ background:var(--accent-100); }
+  .map-card:hover .map-cta{ color:var(--accent-900); }
+  .map-tag{ font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--accent-700); }
+  .map-title{ font-size:17px; font-weight:800; }
+  .map-desc{ font-size:13px; color:var(--neutral-700); flex:1; }
+  .map-cta{ font-size:13px; font-weight:700; color:var(--accent-700); margin-top:auto; }
+
+  /* — noon rundown — */
+  .entry{ padding:16px 0; border-top:1px solid var(--divider); }
+  .entry:first-child{ border-top:0; padding-top:0; }
+  .entry-date{
+    display:inline-flex; font-size:11px; font-weight:800; letter-spacing:0.04em;
+    background:var(--ink); color:#fff; padding:3px 8px; margin-bottom:8px;
+  }
+  .entry-status{ font-size:15px; font-weight:700; margin-bottom:6px; }
+  .entry-body{ font-size:14px; color:var(--neutral-800); margin-bottom:10px; }
+  .entry ul{ display:flex; flex-direction:column; gap:6px; }
+  .entry li{ font-size:13.5px; color:var(--neutral-800); padding-left:14px; position:relative; }
+  .entry li::before{ content:"–"; position:absolute; left:0; color:var(--accent-700); font-weight:700; }
+
+  /* — news feed — */
+  .news-list{ display:flex; flex-direction:column; gap:14px; }
+  .news-list li{ padding-bottom:14px; border-bottom:1px solid var(--divider); }
+  .news-list li:last-child{ border-bottom:0; padding-bottom:0; }
+  .news-list .src{ display:block; font-size:11px; font-weight:700; letter-spacing:0.03em; text-transform:uppercase; color:var(--neutral-600); margin-bottom:4px; }
+  .news-list a{ display:block; font-size:15px; font-weight:600; color:var(--ink); text-decoration:none; margin-bottom:3px; }
+  .news-list a:hover{ color:var(--accent-700); text-decoration:underline; }
+  .news-list p{ font-size:12.5px; color:var(--neutral-600); }
+  .feed-empty{ text-align:left; padding:18px; background:var(--surface); border:1px dashed var(--divider-strong); font-size:14px; }
+  .feed-empty a{ font-weight:700; }
+
+  /* — footer — */
+  footer{ padding:24px 0 40px; }
+  footer .note{ font-size:12.5px; color:var(--neutral-700); line-height:1.6; margin-bottom:16px; }
+  .emergency{ background:var(--ink); color:#fff; padding:16px; font-size:14px; font-weight:600; }
+  .emergency b{ color:var(--accent-300, #ffc4b8); }
+
+  @media (max-width:520px){
+    h1.title{ font-size:27px; }
+    .map-grid{ grid-template-columns:1fr; }
+    .status-headline{ font-size:19px; }
   }
 </style>
 </head>
 <body>
 
-<div id="offline-banner">
-  ⚠ OFFLINE — showing a saved copy. Fire conditions may have changed.
-  In an emergency call 112.
+<div id="offline-banner" role="status" aria-live="polite">
+  <div class="inner">
+    ⚠ OFFLINE — showing a saved copy. Fire conditions may have changed.
+    <div class="sub">In an emergency call 112.</div>
+  </div>
 </div>
 
-<header>
-  <div class="eyebrow">Fire Watch · Occitanie / Haute-Garonne</div>
-  <h1>Toulouse Wildfire Tracker</h1>
-  <div class="tripbar">
-    <span>Headlines auto-updated: <strong><!--STAMP_START-->pending first build<!--STAMP_END--></strong></span>
-    <span id="age" data-built="">&nbsp;</span>
+<header class="site">
+  <div class="wrap header-inner">
+    <span class="eyebrow">Fire Watch · Occitanie / Haute-Garonne</span>
+    <h1 class="title">Toulouse Wildfire Tracker</h1>
+    <div class="tripbar">
+      <span>Built <span class="stamp" id="build-stamp" data-built="2026-07-31T09:22:19.458945+02:00"><!--STAMP_START-->Fri 31 Jul 2026, 09:22 Paris<!--STAMP_END--></span></span>
+      <span class="chip fresh" id="age"><span class="dot"></span>updated just now</span>
+    </div>
   </div>
 </header>
 
-<main>
+<main class="wrap">
 
-  <section class="status-band">
-    <div class="level">● TOULOUSE: ORANGE TODAY, RESTRICTIONS STILL ACTIVE — GIRONDE FIRE NOW SEVERE</div>
-    <p>Toulouse's daily fire-danger eased to orange ("élevé") for Wednesday 29 July, down from red, but the préfecture's ban on open flames and spark-risk equipment (12:00–20:00, through 1 September) still applies regardless of the daily colour. Small fires have popped up in and around Toulouse this week and been contained quickly. The bigger story is the Gironde fire near Bordeaux, which has grown to roughly 42,000 hectares with about 220,000 people evacuated at peak — one of the largest evacuations in French history — though it's still well over 200 km from Toulouse. A new heatwave peaking around Saturday 1 Aug could push Toulouse back to red over the coming weekend.</p>
+  <section aria-labelledby="status-h">
+    <div class="section-head">
+      <h2 class="section-title" id="status-h">Right now</h2>
+    </div>
+    <div class="status-band">
+      <div class="status-restriction">
+        <span class="mark">●</span>
+        <span>Open-flame &amp; spark-risk equipment ban, 12:00–20:00 daily through 1 September — in force regardless of today's colour.</span>
+      </div>
+
+      <div class="risk-scale" id="risk-scale" role="img" aria-label="Official fire danger scale, four levels."
+           data-risk-date="<!--RISKDATE_START-->2026-07-29<!--RISKDATE_END-->"
+           data-risk-level="<!--RISKLEVEL_START-->3<!--RISKLEVEL_END-->">
+        <div class="risk-seg" style="background:var(--risk-faible-bg); color:var(--risk-faible);">Low<span class="fr">Faible</span></div>
+        <div class="risk-seg" style="background:var(--risk-modere-bg); color:var(--risk-modere);">Moderate<span class="fr">Modéré</span></div>
+        <div class="risk-seg" style="background:var(--risk-eleve-bg); color:var(--risk-eleve);">High<span class="fr">Élevé</span></div>
+        <div class="risk-seg" style="background:var(--risk-tres-eleve-bg); color:var(--risk-tres-eleve);">Severe<span class="fr">Très élevé</span></div>
+      </div>
+
+      <p id="risk-notice" class="risk-notice"></p>
+
+      <p class="status-headline">Toulouse: no active fire in the department</p>
+      <p class="status-lede">The major fire is 200&nbsp;km away in Gironde, near Bordeaux. Daily fire-danger level changes — see the scale above.</p>
+
+      <details class="status-detail">
+        <summary>Full context</summary>
+        <div class="detail-body">
+          <p style="margin-bottom:10px;">As of Wednesday 29 July, Toulouse's daily fire-danger had eased to High ("élevé", orange) from Severe. The préfecture's ban on open flames and spark-risk equipment still applies regardless of the daily colour. Small fires have popped up in and around Toulouse this week and been contained quickly.</p>
+          <p style="margin-bottom:10px;">The bigger story is the Gironde fire near Bordeaux, which has grown to roughly 42,000 hectares with about 220,000 people evacuated at peak — one of the largest evacuations in French history — though it's still well over 200&nbsp;km from Toulouse.</p>
+          <p>A heatwave was forecast to peak around Saturday 1 August, which could push the department back to Severe. Check the Météo-France map above for the current day.</p>
+        </div>
+      </details>
+    </div>
   </section>
 
-  <section>
-    <div class="sec-label">Live official maps <span>open in new tab</span></div>
-    <div class="maps-grid">
+  <section aria-labelledby="maps-h">
+    <div class="section-head">
+      <h2 class="section-title" id="maps-h">Live official maps</h2>
+    </div>
+    <div class="map-grid">
       <a class="map-card" href="https://meteofrance.com/meteo-des-forets" target="_blank" rel="noopener">
-        <span class="go">↗</span>
-        <span class="tag">Official · Daily</span>
-        <h3>Météo-France — Météo des forêts</h3>
-        <p>The authoritative daily/next-day fire-danger map by department (faible → extrême). This is the source the préfecture's red-alert triggers are based on.</p>
+        <span class="map-tag">Official · Daily</span>
+        <span class="map-title">Météo-France — Météo des forêts</span>
+        <span class="map-desc">The authoritative daily/next-day fire-danger map by department.</span>
+        <span class="map-cta">Open map ↗</span>
       </a>
       <a class="map-card" href="https://forest-fire.emergency.copernicus.eu/applications" target="_blank" rel="noopener">
-        <span class="go">↗</span>
-        <span class="tag">Satellite · Near-live</span>
-        <h3>EFFIS / Copernicus</h3>
-        <p>EU satellite fire-detection map — shows actual active hotspots and burned-area extent, updated through the day, not just risk level.</p>
+        <span class="map-tag">Satellite · Near-live</span>
+        <span class="map-title">EFFIS / Copernicus</span>
+        <span class="map-desc">EU satellite fire detection — actual hotspots and burned area, not just risk.</span>
+        <span class="map-cta">Open map ↗</span>
       </a>
       <a class="map-card" href="https://www.haute-garonne.gouv.fr/Actualites/Risque-de-feux-de-foret-de-niveau-tres-eleve" target="_blank" rel="noopener">
-        <span class="go">↗</span>
-        <span class="tag">Préfecture 31</span>
-        <h3>Préfecture de la Haute-Garonne</h3>
-        <p>Local prefectural orders, restrictions, and department-specific announcements as they're issued.</p>
+        <span class="map-tag">Préfecture 31</span>
+        <span class="map-title">Préfecture de la Haute-Garonne</span>
+        <span class="map-desc">Local prefectural orders and restrictions as issued.</span>
+        <span class="map-cta">Open source ↗</span>
       </a>
       <a class="map-card" href="https://www.pompiers.fr/actualites" target="_blank" rel="noopener">
-        <span class="go">↗</span>
-        <span class="tag">SDIS 31 / Sapeurs-pompiers</span>
-        <h3>Fire & rescue updates</h3>
-        <p>Ground-level incident reports from France's fire services — best source for any fire actually breaking out near Toulouse.</p>
+        <span class="map-tag">SDIS 31</span>
+        <span class="map-title">Fire &amp; rescue updates</span>
+        <span class="map-desc">Ground-level incident reports from French fire services.</span>
+        <span class="map-cta">Open source ↗</span>
       </a>
     </div>
   </section>
 
-  <section>
-    <div class="sec-label">Noon rundown <span>English, daily</span></div>
 
-    <div class="rundown-entry">
-      <div class="date mono">WED 29 JUL — 12:00</div>
-      <h4>Status: Small fires in and around Toulouse, contained; Gironde fire now much larger and 15 km from Bordeaux</h4>
-      <p>Haute-Garonne's daily fire-danger actually eased slightly today — Toulouse itself is at orange ("élevé") rather than yesterday's red, though the préfecture's restriction order (no open flames, no spark-risk machinery 12:00–20:00) stays in force regardless. That said, several small fires have flared in the department in the last day: one broke out inside Toulouse itself and was brought under control and extinguished by evening; another was reported near Arnaud-Guilhem, between Saint-Gaudens and Toulouse, with fire crews engaged; scattered brush fires were also logged this week in Escalquens, Merville, Montgaillard, and Avignonet-Lauragais near the A61 — all local and dealt with quickly, not large blazes.</p>
-      <ul>
-        <li>Gironde (Bordeaux area): the fire has grown sharply — now around 42,000 hectares burned, roughly 220,000 people evacuated at peak, one of the largest evacuations in French history. Flames reached about 15 km from Bordeaux near Martignas-sur-Jalle; the mayor says evacuating the city itself isn't currently planned. Two firefighters died battling the blaze near Mérignac.</li>
-        <li>A military A400M aircraft, converted into a water bomber carrying 20 tonnes of retardant, has been deployed to reinforce firefighting efforts.</li>
-        <li>Nationally: over 12,500 fire starts and roughly 44,000 hectares burned since January 2026 — already worse than the severe 2022 season.</li>
-        <li>A new heatwave is still forecast to peak around Saturday 1 Aug, which could push Toulouse's risk back up to red.</li>
-      </ul>
+  <section aria-labelledby="dk-h">
+    <div class="section-head">
+      <h2 class="section-title" id="dk-h">Danish travellers · Danske rejsende</h2>
+      <span class="section-tag tag-manual">Udenrigsministeriet</span>
+    </div>
+    <div class="map-grid">
+      <a class="map-card" href="https://danskerlisten.um.dk/" target="_blank" rel="noopener">
+        <span class="map-tag">Register · Tilmeld</span>
+        <span class="map-title">Danskerlisten</span>
+        <span class="map-desc">Register your trip so the Danish MFA can reach you by SMS and email in a crisis. Free, voluntary, takes two minutes — also available in the Rejseklar app.</span>
+        <span class="map-cta">Tilmeld dig ↗</span>
+      </a>
+      <a class="map-card" href="https://um.dk/rejse-og-ophold/rejse-til-udlandet/rejsevejledninger/frankrig" target="_blank" rel="noopener">
+        <span class="map-tag">Advisory · Rejsevejledning</span>
+        <span class="map-title">Rejsevejledning — Frankrig</span>
+        <span class="map-desc">The Danish MFA's official travel advice for France, including its current wildfire guidance. Last revised 4 May 2026.</span>
+        <span class="map-cta">Læs vejledningen ↗</span>
+      </a>
+    </div>
+    <p class="entry-body" style="margin-top:14px;">
+      France operates <b>FR-Alert</b>, a national warning system that pushes emergency alerts
+      straight to any phone in an affected area, in French and English. Nothing to install or
+      sign up for — just keep public emergency alerts switched on in your phone settings and
+      make sure you have mobile coverage.
+    </p>
+    <p class="entry-body">
+      Danish MFA 24/7 emergency line: <b>+45 33 92 11 12</b>. For an emergency inside France,
+      call 112 first.
+    </p>
+  </section>
+
+  <section aria-labelledby="notes-h">
+    <div class="section-head">
+      <h2 class="section-title" id="notes-h">Noon rundown</h2>
+      <span class="section-tag tag-manual">Hand-written · not automated</span>
     </div>
 
-    <div class="rundown-entry">
-      <div class="date mono">TUE 28 JUL — 12:00</div>
-      <h4>Status: Elevated risk, no fire in Haute-Garonne, watching the heatwave</h4>
-      <p>Haute-Garonne remains under red fire-danger vigilance but has no active blaze. The department's attention is on a new heatwave arriving from Tuesday, forecast to push temperatures to 37–40°C between Toulouse and the Aquitaine basin, peaking around Saturday 1 Aug.</p>
+    <div class="entry">
+      <span class="entry-date">WED 29 JUL — 12:00 (rev. afternoon)</span>
+      <p class="entry-status">Small fires in and around Toulouse, contained; Gironde fire now much larger and 15&nbsp;km from Bordeaux</p>
+      <p class="entry-body">Local ignitions this week have been fast and small — quickly reached and put out by SDIS 31. The regional picture is dominated by the Gironde fire, which is now large enough to be shaping national response and drawing in outside resources.</p>
       <ul>
-        <li>Gironde (Bordeaux area): ~420 km² burned, holding steady overnight; ~4,000 evacuated from Atlantic coast tourist sites (Cap Ferret/Le Porge); A63 highway partly closed.</li>
-        <li>Landes: separate fire now "fixed" (contained), evacuees returning home.</li>
-        <li>Aude/Hérault: ~900 hectares burned near the Spanish border, contained but active earlier in July.</li>
-        <li>Nationally: ~115,000 hectares burned in France so far in 2026; military A400M aircraft now being used as air tankers.</li>
+        <li>Gironde: ~42,000 hectares burned, ~220,000 evacuated at peak — one of the largest evacuations in French history. Two firefighters died near Mérignac.</li>
+        <li>Newly reported: 150+ homes destroyed at Le Porge; fresh evacuations at Marcheprime and parts of Cestas after the Saumos fire flared up. Authorities still call the Gironde front "très défavorable".</li>
+        <li>Some Gironde evacuees are being housed at the MEETT centre on the edge of Toulouse — the relief effort reaching here, not the fire.</li>
+        <li>Military A400M water bomber deployed, 20 tonnes of retardant per pass.</li>
+        <li>Nationally: 12,500+ fire starts, ~44,000 hectares burned since January 2026.</li>
       </ul>
-    </div>
-
-    <div class="placeholder">
-      Entries above are written by hand and dated. The auto-updating headline feed is further down the page.
     </div>
   </section>
 
-  <section>
-    <div class="sec-label">Latest headlines <span>auto-updated daily</span></div>
-    <!--FEED_START-->
-    <ul class="news-list"><li><p>Headlines appear here after the first build runs.</p></li></ul>
+  <section aria-labelledby="feed-h" class="plain-rule">
+    <div class="section-head">
+      <h2 class="section-title" id="feed-h">Latest headlines</h2>
+      <span class="section-tag tag-auto">Auto-refreshed every 3 hours</span>
+    </div>
+<!--FEED_START-->
+    <ul class="news-list"><li><p>No headlines retrieved on the last run. Use the official map links above.</p></li></ul>
     <!--FEED_END-->
+  </section>
+
+  <section class="plain-rule" style="border-bottom:0;">
+    <footer>
+      <p class="note">Headlines above refresh automatically from the news wire every three hours and carry no editorial judgment. The noon rundown is written by hand once a day and always carries its own date — treat anything above without a date as unverified.</p>
+      <div class="emergency">
+        <b>In an emergency in France, call 112</b> (or 18 for the fire service).<br>
+        This page is an informal summary, not an official warning system.
+      </div>
+    </footer>
   </section>
 
 </main>
 
-<footer>
-  <div class="how">
-    <strong>How this page works.</strong> The <em>Latest headlines</em> section rebuilds automatically every day at 12:00 Paris time and is always current. The <em>Noon rundown</em> above it is written by hand and carries its own date — check that date before relying on it. The four official map links are always live: for anything urgent, open those first, they are the authoritative sources.
-    <br><br>
-    <strong>In an emergency in France, call 112</strong> (or 18 for the fire service). This page is an informal summary, not an official warning system.
-  </div>
-</footer>
-
 <script>
-  // Show how old this page is, every time it is opened. A parent checking
-  // during an incident must be able to see at a glance whether they are
-  // looking at current information or at this morning's.
-  (function () {
-    var el = document.getElementById('age');
-    var built = el.getAttribute('data-built');
-    if (!built) { el.textContent = ''; return; }
+(function(){
 
-    var hours = (Date.now() - new Date(built).getTime()) / 3600000;
-    var label;
+  // ---- Risk scale: only assert a level if it was confirmed TODAY. ----
+  // The level is set by hand (or by build.py when a Meteo-France API key is
+  // configured). If that date is not today's date, the page must not claim to
+  // know the current level -- it greys the scale out and sends the reader to
+  // the official map instead. Showing yesterday's level as if it were today's
+  // is the single most misleading thing this page could do.
+  (function(){
+    var scale  = document.getElementById('risk-scale');
+    var notice = document.getElementById('risk-notice');
+    if(!scale || !notice) return;
 
-    if (hours < 1)       label = 'updated just now';
-    else if (hours < 2)  label = 'updated 1 hour ago';
-    else if (hours < 24) label = 'updated ' + Math.floor(hours) + ' hours ago';
-    else {
-      var d = Math.floor(hours / 24);
-      label = 'updated ' + d + (d === 1 ? ' day ago' : ' days ago');
+    var LABELS = ['', 'Low (Faible)', 'Moderate (Modéré)', 'High (Élevé)', 'Severe (Très élevé)'];
+    var MAP_URL = 'https://meteofrance.com/meteo-des-forets';
+
+    var setDate = (scale.getAttribute('data-risk-date') || '').trim();
+    var level   = parseInt(scale.getAttribute('data-risk-level'), 10);
+
+    var now = new Date();
+    var today = now.getFullYear() + '-' +
+                String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                String(now.getDate()).padStart(2, '0');
+
+    var segs = scale.querySelectorAll('.risk-seg');
+    for (var i = 0; i < segs.length; i++) {
+      segs[i].classList.remove('today');
+      var ptr = segs[i].querySelector('.pointer');
+      if (ptr) ptr.remove();
     }
 
-    el.textContent = label;
-    el.className = hours < 6 ? 'fresh' : (hours < 18 ? 'aging' : 'stale');
-    if (hours >= 18) el.textContent = '⚠ ' + label + ' — check official maps';
+    var valid = setDate === today && level >= 1 && level <= 4;
+
+    if (valid) {
+      var seg = segs[level - 1];
+      seg.classList.add('today');
+      var tag = document.createElement('span');
+      tag.className = 'pointer';
+      tag.textContent = 'Today';
+      seg.insertBefore(tag, seg.firstChild);
+      scale.classList.remove('unconfirmed');
+      scale.setAttribute('aria-label',
+        'Official fire danger scale. Today in Haute-Garonne: ' + LABELS[level] + '.');
+      notice.className = 'risk-notice ok';
+      notice.textContent = 'Today\u2019s level, confirmed ' + setDate + '.';
+    } else {
+      scale.classList.add('unconfirmed');
+      scale.setAttribute('aria-label',
+        'Official fire danger scale. Today\u2019s level for Haute-Garonne is not confirmed on this page.');
+      notice.className = 'risk-notice stale';
+      var was = (level >= 1 && level <= 4 && setDate)
+        ? ' It was ' + LABELS[level] + ' on ' + setDate + '.'
+        : '';
+      notice.innerHTML = '\u26A0 Today\u2019s level is not confirmed here.' + was +
+        ' Levels change daily \u2014 <a href="' + MAP_URL + '" target="_blank" rel="noopener">' +
+        'open M\u00e9t\u00e9o-France for today\u2019s map \u2197</a>';
+    }
   })();
 
-  // Register the service worker so the page can be installed and opened offline.
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-      navigator.serviceWorker.register('sw.js').catch(function (err) {
-        console.warn('Service worker registration failed:', err);
-      });
+  var stampEl = document.getElementById('build-stamp');
+  var ageEl = document.getElementById('age');
+  function renderAge(){
+    var iso = stampEl.getAttribute('data-built');
+    if(!iso) return;
+    var built = new Date(iso);
+    if(isNaN(built.getTime())) return;
+    var hours = (Date.now() - built.getTime()) / 36e5;
+    var h = Math.max(0, Math.round(hours));
+    var label = h <= 1 ? 'updated ' + (h === 0 ? 'just now' : '1 hour ago') : 'updated ' + h + ' hours ago';
+    if(h >= 24){
+      var d = Math.round(h/24);
+      label = 'updated ' + d + (d===1?' day ago':' days ago');
+    }
+    ageEl.className = 'chip fresh';
+    if(hours >= 18){ ageEl.className = 'chip stale'; label = '⚠ ' + label + ' — check official maps'; }
+    else if(hours >= 6){ ageEl.className = 'chip aging'; }
+    ageEl.innerHTML = '<span class="dot"></span>' + label;
+  }
+  renderAge();
+  setInterval(renderAge, 60000);
+
+  var banner = document.getElementById('offline-banner');
+  function syncOnline(){ banner.classList.toggle('show', !navigator.onLine); }
+  window.addEventListener('online', syncOnline);
+  window.addEventListener('offline', syncOnline);
+  syncOnline();
+
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('sw.js').catch(function(){});
     });
   }
-
-  // Show a warning whenever the device is offline. Fire information that
-  // cannot be refreshed should never look authoritative.
-  var banner = document.getElementById('offline-banner');
-  function syncBanner() {
-    banner.classList.toggle('show', !navigator.onLine);
-  }
-  window.addEventListener('online', syncBanner);
-  window.addEventListener('offline', syncBanner);
-  syncBanner();
+})();
 </script>
 
-</body>
-</html>
+
+
+</body></html>

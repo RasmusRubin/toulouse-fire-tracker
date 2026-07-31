@@ -123,3 +123,33 @@ alongside `index.html`. Upload them the same way as the others.
 Service workers only run over HTTPS. GitHub Pages provides this
 automatically, so the deployed link works. Opening `index.html` as a local
 file will *not* install — that is expected, not a bug.
+
+---
+
+## Live fire-danger level (optional)
+
+The risk scale only shows a level if that level was confirmed **today**. If the
+stored date is not today's date, the scale greys itself out and links to
+Météo-France instead. It will never present an old level as current.
+
+To have the level update automatically:
+
+1. Register free at `portail-api.meteofrance.fr` and subscribe to the
+   **Météo des forêts** API.
+2. In the repo: **Settings → Secrets and variables → Actions → New repository
+   secret**, named `METEOFRANCE_API_KEY`.
+3. In `.github/workflows/update.yml`, add to the "Rebuild page" step:
+
+   ```yaml
+   - name: Rebuild page
+     env:
+       METEOFRANCE_API_KEY: ${{ secrets.METEOFRANCE_API_KEY }}
+     run: python build.py
+   ```
+
+Without the key everything else still works — the page simply shows the level
+as unconfirmed, which is the honest state.
+
+**Note:** the response format is not verified in this repo. Check the Action log
+after the first run; if it prints a parse failure, the field names in
+`fetch_risk_level()` need adjusting to match the real payload.
