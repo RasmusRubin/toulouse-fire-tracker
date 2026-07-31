@@ -126,11 +126,22 @@ def fetch_risk_level():
 
     Returns (iso_date, level 1-4) or (None, None).
 
+    Endpoint confirmed from the Meteo-France API portal (DonneesPubliquesMeteoForets,
+    v1): GET /carte/departement/encours on host
+    https://public-api.meteofrance.fr/public/DPMeteoForets/v1
+    Returns the current departmental map as CSV or JSON.
+
     Requires a free Meteo-France API key in the METEOFRANCE_API_KEY env var
-    (set it as a GitHub Actions secret). Without a key this returns None and
-    the page falls back to showing "level not confirmed today" -- which is
-    correct behaviour, not a failure. Never guess a level: a wrong level is
-    far worse than an absent one.
+    (set as a GitHub Actions secret). Without a key this returns None and the
+    page falls back to showing "level not confirmed today" -- correct
+    behaviour, not a failure. Never guess a level: a wrong level is worse
+    than an absent one.
+
+    NOTE: the exact response shape (JSON field names, or CSV-only) was not
+    verified against a live call while writing this -- only the endpoint path
+    and general product description were available. Check the first Action
+    run's log; if parsing fails it will say so explicitly, and the field
+    names/parsing below are the first thing to adjust.
     """
     import os
     key = os.environ.get("METEOFRANCE_API_KEY", "").strip()
@@ -138,31 +149,69 @@ def fetch_risk_level():
         print("  i no METEOFRANCE_API_KEY set - risk level left unconfirmed")
         return None, None
 
-    url = ("https://public-api.meteofrance.fr/public/DPPaquetMeteoForets/v1/"
-           "paquet/donnees?id-departement=31")
+    base = "https://public-api.meteofrance.fr/public/DPMeteoForets/v1"
+    url = f"{base}/carte/departement/encours?format=json"
+
     try:
         req = urllib.request.Request(url, headers={"apikey": key, "User-Agent": UA})
         with urllib.request.urlopen(req, timeout=30) as r:
-            import json
-            data = json.loads(r.read())
+            raw = r.read()
     except Exception as e:
         print(f"  ! risk level fetch failed: {e}")
         return None, None
 
     today = datetime.now(timezone(timedelta(hours=2))).date().isoformat()
-    try:
-        for row in (data if isinstance(data, list) else data.get("data", [])):
-            date = str(row.get("date", ""))[:10]
-            lvl = row.get("niveau") or row.get("niveau_danger") or row.get("level")
-            if date == today and lvl is not None:
-                lvl = int(lvl)
-                if 1 <= lvl <= 4:
-                    print(f"  + risk level for {today}: {lvl}")
-                    return today, lvl
-    except Exception as e:
-        print(f"  ! risk level parse failed: {e}")
 
-    print("  i no matching risk level for today - left unconfirmed")
+    # Try JSON first; fall back to CSV if the API only returns that format
+    # regardless of the query parameter.
+    rows = None
+    try:
+        import json
+        parsed = json.loads(raw)
+        rows = parsed if isinstance(parsed, list) else parsed.get("data", parsed.get("features", []))
+    except Exception:
+        try:
+            import csv, io
+            text = raw.decode("utf-8-sig", errors="replace")
+            delim = ";" if text.count(";") > text.count(",") else ","
+            rows = list(csv.DictReader(io.StringIO(text), delimiter=delim))
+        except Exception as e:
+            print(f"  ! risk level response unreadable as JSON or CSV: {e}")
+            return None, None
+
+    if not rows:
+        print("  ! risk level response had no rows")
+        return None, None
+
+    def get_field(row, *names):
+        for n in names:
+            for k in row.keys():
+                if k.lower().replace(" ", "").replace("_", "") == n:
+                    return row[k]
+        return None
+
+    for row in rows:
+        props = row.get("properties", row) if isinstance(row, dict) else row
+        dept = get_field(props, "departement", "coddep", "codedepartement", "insee", "dep")
+        if dept is None:
+            continue
+        if str(dept).strip().lstrip("0") not in ("31",):
+            continue
+
+        date_val = get_field(props, "date", "datej1", "jour")
+        lvl_val = get_field(props, "niveau", "niveaudanger", "niveauj1", "level", "danger")
+
+        date_str = str(date_val)[:10] if date_val else None
+        try:
+            lvl = int(lvl_val)
+        except (TypeError, ValueError):
+            continue
+
+        if date_str == today and 1 <= lvl <= 4:
+            print(f"  + risk level for dept 31, {today}: {lvl}")
+            return today, lvl
+
+    print("  i no matching dept-31 row for today - left unconfirmed")
     return None, None
 
 
