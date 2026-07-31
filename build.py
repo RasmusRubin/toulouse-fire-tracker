@@ -383,13 +383,17 @@ def main():
 
     # Risk level. Only written when genuinely fetched for today; otherwise the
     # existing (older) date stays put and the page greys the scale out by itself.
+    #
+    # NOTE: these are plain HTML attributes, NOT comment markers. HTML comments
+    # are not parsed inside attribute values -- an earlier version used
+    # data-risk-date="<!--MARKER-->value<!--MARKER-->" and the browser read the
+    # whole literal string including the comment syntax, so the date never
+    # matched and the scale always showed "unconfirmed".
     if risk_date and risk_level:
-        page = re.sub(r"<!--RISKDATE_START-->.*?<!--RISKDATE_END-->",
-                      lambda _: f"<!--RISKDATE_START-->{risk_date}<!--RISKDATE_END-->",
-                      page, flags=re.S)
-        page = re.sub(r"<!--RISKLEVEL_START-->.*?<!--RISKLEVEL_END-->",
-                      lambda _: f"<!--RISKLEVEL_START-->{risk_level}<!--RISKLEVEL_END-->",
-                      page, flags=re.S)
+        page = re.sub(r'data-risk-date="[^"]*"',
+                      lambda _: f'data-risk-date="{risk_date}"', page)
+        page = re.sub(r'data-risk-level="[^"]*"',
+                      lambda _: f'data-risk-level="{risk_level}"', page)
 
     # Flight statuses. Only stamp "flight-built" when at least one flight was
     # actually resolved this run, so the freshness chip reflects real checks,
