@@ -243,10 +243,40 @@
   .emergency{ background:var(--ink); color:#fff; padding:16px; font-size:14px; font-weight:600; }
   .emergency b{ color:var(--accent-300, #ffc4b8); }
 
+  /* — flight tracker — */
+  .flight-groups{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .flight-group-label{
+    font-size:11px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase;
+    color:var(--accent-700); margin-bottom:8px;
+  }
+  .flight-card{
+    background:var(--card); border:2px solid var(--divider-strong); padding:14px 16px;
+    margin-bottom:10px;
+  }
+  .flight-top{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-bottom:8px; }
+  .flight-no{ font-weight:800; font-size:13.5px; }
+  .flight-date{ font-size:11.5px; color:var(--neutral-700); }
+  .flight-route{ display:flex; align-items:center; gap:8px; font-size:19px; font-weight:800; margin-bottom:4px; }
+  .flight-route .arrow{ color:var(--accent-700); font-size:16px; }
+  .flight-times{ display:flex; justify-content:space-between; font-size:12px; color:var(--neutral-700); margin-bottom:8px; }
+  .status-pill{
+    display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:700;
+    padding:4px 10px; border-radius:20px;
+  }
+  .status-pill.scheduled,.status-pill.unknown{ background:var(--neutral-100); color:var(--neutral-700); }
+  .status-pill.ontime{ background:var(--risk-faible-bg); color:var(--risk-faible); }
+  .status-pill.delayed{ background:var(--risk-modere-bg); color:var(--risk-modere); }
+  .status-pill.departed,.status-pill.enroute{ background:var(--accent-700); color:#fff; }
+  .status-pill.landed{ background:var(--risk-faible); color:#fff; }
+  .status-pill.cancelled,.status-pill.diverted{ background:var(--accent-100); color:var(--accent-800); }
+  .flight-detail{ font-size:11.5px; color:var(--neutral-700); margin-top:6px; }
+  .flight-note{ font-size:12.5px; color:var(--neutral-700); margin-top:6px; }
+
   @media (max-width:520px){
     h1.title{ font-size:27px; }
     .map-grid{ grid-template-columns:1fr; }
     .status-headline{ font-size:19px; }
+    .flight-groups{ grid-template-columns:1fr; }
   }
 </style>
 </head>
@@ -264,7 +294,7 @@
     <span class="eyebrow">Fire Watch · Occitanie / Haute-Garonne</span>
     <h1 class="title">Toulouse Wildfire Tracker</h1>
     <div class="tripbar">
-      <span>Built <span class="stamp" id="build-stamp" data-built="2026-07-31T09:22:19.458945+02:00"><!--STAMP_START-->Fri 31 Jul 2026, 09:22 Paris<!--STAMP_END--></span></span>
+      <span>Built <span class="stamp" id="build-stamp" data-built=""><!--STAMP_START-->pending first build<!--STAMP_END--></span></span>
       <span class="chip fresh" id="age"><span class="dot"></span>updated just now</span>
     </div>
   </div>
@@ -283,8 +313,8 @@
       </div>
 
       <div class="risk-scale" id="risk-scale" role="img" aria-label="Official fire danger scale, four levels."
-           data-risk-date="<!--RISKDATE_START-->2026-07-29<!--RISKDATE_END-->"
-           data-risk-level="<!--RISKLEVEL_START-->3<!--RISKLEVEL_END-->">
+           data-risk-date="<!--RISKDATE_START-->2026-07-31<!--RISKDATE_END-->"
+           data-risk-level="<!--RISKLEVEL_START-->2<!--RISKLEVEL_END-->">
         <div class="risk-seg" style="background:var(--risk-faible-bg); color:var(--risk-faible);">Low<span class="fr">Faible</span></div>
         <div class="risk-seg" style="background:var(--risk-modere-bg); color:var(--risk-modere);">Moderate<span class="fr">Modéré</span></div>
         <div class="risk-seg" style="background:var(--risk-eleve-bg); color:var(--risk-eleve);">High<span class="fr">Élevé</span></div>
@@ -293,15 +323,15 @@
 
       <p id="risk-notice" class="risk-notice"></p>
 
-      <p class="status-headline">Toulouse: no active fire in the department</p>
-      <p class="status-lede">The major fire is 200&nbsp;km away in Gironde, near Bordeaux. Daily fire-danger level changes — see the scale above.</p>
+      <p class="status-headline">Fire danger has dropped to Moderate in Haute-Garonne — and stays there tomorrow</p>
+      <p class="status-lede">Météo-France has no department in France at Severe today or tomorrow. The Gironde fire near Bordeaux is stabilised, the A63 has reopened and 144,000 people have gone home.</p>
 
       <details class="status-detail">
         <summary>Full context</summary>
         <div class="detail-body">
-          <p style="margin-bottom:10px;">As of Wednesday 29 July, Toulouse's daily fire-danger had eased to High ("élevé", orange) from Severe. The préfecture's ban on open flames and spark-risk equipment still applies regardless of the daily colour. Small fires have popped up in and around Toulouse this week and been contained quickly.</p>
-          <p style="margin-bottom:10px;">The bigger story is the Gironde fire near Bordeaux, which has grown to roughly 42,000 hectares with about 220,000 people evacuated at peak — one of the largest evacuations in French history — though it's still well over 200&nbsp;km from Toulouse.</p>
-          <p>A heatwave was forecast to peak around Saturday 1 August, which could push the department back to Severe. Check the Météo-France map above for the current day.</p>
+          <p style="margin-bottom:10px;">No significant fire is burning in Haute-Garonne. Small ignitions have appeared in and around Toulouse through the week — one inside the city itself, others at Arnaud-Guilhem, Escalquens, Merville and near the A61 — and all were reached and put out quickly by SDIS 31. The préfecture's ban on open flames and spark-risk equipment (12:00–20:00, through 1 September) applies whenever the department is at the Severe level.</p>
+          <p style="margin-bottom:10px;">The Saumos fire in Gironde burned roughly 42,000 hectares and forced about 224,000 preventive evacuations — one of the largest in French history — but it is over 200&nbsp;km from Toulouse and the trend has turned. The préfecture declared it stabilised, reopened the A63 in both directions on Thursday 30 July, and has now authorised 144,000 people to return home. It remains under constant watch: 14 flare-ups were logged on Wednesday alone.</p>
+          <p>The heat peak expected on Saturday 1 August has not materialised as a fire-danger spike: Météo-France's bulletin issued Thursday at 17:00 puts Haute-Garonne at Moderate for both Friday and Saturday, with no department in the country at Severe on either day.</p>
         </div>
       </details>
     </div>
@@ -337,6 +367,65 @@
         <span class="map-cta">Open source ↗</span>
       </a>
     </div>
+  </section>
+
+  <section aria-labelledby="flights-h">
+    <div class="section-head">
+      <h2 class="section-title" id="flights-h">Flight Tracker</h2>
+      <span class="section-tag tag-auto" id="flight-age" data-flight-built="">Not yet checked</span>
+    </div>
+    <div class="flight-groups">
+      <div>
+        <div class="flight-group-label">Outbound · Fri 31 Jul 2026</div>
+        <div class="flight-card" data-flight="SN2260" data-date="2026-07-31">
+          <div class="flight-top">
+            <span class="flight-no">Brussels Airlines SN2260</span>
+            <span class="flight-date">31 Jul</span>
+          </div>
+          <div class="flight-route">CPH <span class="arrow">→</span> BRU</div>
+          <div class="flight-times"><span>Dep 18:10</span><span>Arr 19:45</span></div>
+          <span class="status-pill unknown" data-status-el>Not yet checked</span>
+          <div class="flight-detail" data-detail-el></div>
+        </div>
+        <div class="flight-card" data-flight="SN3675" data-date="2026-07-31">
+          <div class="flight-top">
+            <span class="flight-no">Brussels Airlines SN3675</span>
+            <span class="flight-date">31 Jul</span>
+          </div>
+          <div class="flight-route">BRU <span class="arrow">→</span> TLS</div>
+          <div class="flight-times"><span>Dep 21:05</span><span>Arr 22:45</span></div>
+          <span class="status-pill unknown" data-status-el>Not yet checked</span>
+          <div class="flight-detail" data-detail-el></div>
+        </div>
+      </div>
+      <div>
+        <div class="flight-group-label">Homebound · Sat 8 Aug 2026</div>
+        <div class="flight-card" data-flight="SN3676" data-date="2026-08-08">
+          <div class="flight-top">
+            <span class="flight-no">Brussels Airlines SN3676</span>
+            <span class="flight-date">8 Aug</span>
+          </div>
+          <div class="flight-route">TLS <span class="arrow">→</span> BRU</div>
+          <div class="flight-times"><span>Dep 06:50</span><span>Arr 08:35</span></div>
+          <span class="status-pill unknown" data-status-el>Not yet checked</span>
+          <div class="flight-detail" data-detail-el></div>
+        </div>
+        <div class="flight-card" data-flight="SN2257" data-date="2026-08-08">
+          <div class="flight-top">
+            <span class="flight-no">Brussels Airlines SN2257</span>
+            <span class="flight-date">8 Aug</span>
+          </div>
+          <div class="flight-route">BRU <span class="arrow">→</span> CPH</div>
+          <div class="flight-times"><span>Dep 09:30</span><span>Arr 11:05</span></div>
+          <span class="status-pill unknown" data-status-el>Not yet checked</span>
+          <div class="flight-detail" data-detail-el></div>
+        </div>
+      </div>
+    </div>
+    <p class="flight-note">Scheduled times are the published timetable and may shift closer to departure. The Brussels connection is short by design on both legs — worth an independent check via the airline app if the first leg of a pair shows a delay.</p>
+    <!--FLIGHT_DATA_START
+    {}
+    FLIGHT_DATA_END-->
   </section>
 
 
@@ -378,12 +467,28 @@
     </div>
 
     <div class="entry">
+      <span class="entry-date">FRI 31 JUL — 12:00</span>
+      <p class="entry-status">Gironde fire stabilised, A63 reopened, 144,000 allowed home; nothing significant burning in Haute-Garonne</p>
+      <p class="entry-body">The direction of travel has changed. The Gironde préfecture's Thursday afternoon situation report describes the Saumos fire as stabilised, with evacuees returning in stages and the motorway open again. It is not out — flare-ups are still being logged daily — but it is no longer growing. Haute-Garonne itself has had no significant fire; the small starts around Toulouse this week were all contained the same day.</p>
+      <ul>
+        <li>Saumos fire (Gironde): ~42,000 hectares total. Stabilised, under constant surveillance. 14 flare-ups recorded Wednesday and three pockets still active that evening.</li>
+        <li>144,000 people now authorised to return home, following Eysines, Mérignac and Le Haillan from Tuesday. Remaining returns need prefectural authorisation.</li>
+        <li>A63 motorway reopened in both directions from 14:00 on Thursday 30 July.</li>
+        <li>Official toll: 240 homes destroyed and 231 firefighters injured since the fire began. No deaths among the public; two firefighters died earlier near Mérignac.</li>
+        <li>26 people have been arrested for endangering life — discarded cigarettes, burning off, and dangerous activity in the forest.</li>
+        <li>Météo-France bulletin issued Thursday 30 July at 17:00: Haute-Garonne at <b>Moderate</b> (yellow) for both Friday 31 July and Saturday 1 August. Read directly off the official map.</li>
+        <li>Nationally: 9 departments at High on Friday and 7 on Saturday — <b>none at Severe on either day</b>. The remaining orange sits along the Mediterranean (Aude, Hérault, Gard), not around Toulouse.</li>
+        <li>The Saturday heat peak has not translated into a fire-danger spike for Haute-Garonne. Neighbouring Hautes-Pyrénées actually drops to Low on Saturday.</li>
+      </ul>
+    </div>
+
+    <div class="entry">
       <span class="entry-date">WED 29 JUL — 12:00 (rev. afternoon)</span>
       <p class="entry-status">Small fires in and around Toulouse, contained; Gironde fire now much larger and 15&nbsp;km from Bordeaux</p>
       <p class="entry-body">Local ignitions this week have been fast and small — quickly reached and put out by SDIS 31. The regional picture is dominated by the Gironde fire, which is now large enough to be shaping national response and drawing in outside resources.</p>
       <ul>
         <li>Gironde: ~42,000 hectares burned, ~220,000 evacuated at peak — one of the largest evacuations in French history. Two firefighters died near Mérignac.</li>
-        <li>Newly reported: 150+ homes destroyed at Le Porge; fresh evacuations at Marcheprime and parts of Cestas after the Saumos fire flared up. Authorities still call the Gironde front "très défavorable".</li>
+        <li>Fresh evacuations at Marcheprime and parts of Cestas after the Saumos fire flared up; the Gironde front was described as "très défavorable" at this point.</li>
         <li>Some Gironde evacuees are being housed at the MEETT centre on the edge of Toulouse — the relief effort reaching here, not the fire.</li>
         <li>Military A400M water bomber deployed, 20 tonnes of retardant per pass.</li>
         <li>Nationally: 12,500+ fire starts, ~44,000 hectares burned since January 2026.</li>
@@ -397,8 +502,8 @@
       <span class="section-tag tag-auto">Auto-refreshed every 3 hours</span>
     </div>
 <!--FEED_START-->
-    <ul class="news-list"><li><p>No headlines retrieved on the last run. Use the official map links above.</p></li></ul>
-    <!--FEED_END-->
+<ul class="news-list"><li><p>Headlines appear here after the first build runs.</p></li></ul>
+<!--FEED_END-->
   </section>
 
   <section class="plain-rule" style="border-bottom:0;">
@@ -494,6 +599,49 @@
   }
   renderAge();
   setInterval(renderAge, 60000);
+
+  // ---- Flight tracker: populate cards from the JSON block build.py writes. ----
+  (function(){
+    var flightRe = new RegExp('FLIGHT_DATA' + '_START' + '([\\s\\S]*?)' + 'FLIGHT_DATA' + '_END');
+    var raw = document.body.innerHTML.match(flightRe);
+    var data = {};
+    if (raw) {
+      try { data = JSON.parse(raw[1].replace('-->','').trim()); } catch(e) { data = {}; }
+    }
+    var LABELS = {
+      scheduled:'Scheduled', ontime:'On time', delayed:'Delayed',
+      departed:'Departed', enroute:'In the air', landed:'Landed',
+      cancelled:'Cancelled', diverted:'Diverted', unknown:'Status unknown'
+    };
+    document.querySelectorAll('.flight-card').forEach(function(card){
+      var num = card.getAttribute('data-flight');
+      var d = data[num];
+      var pill = card.querySelector('[data-status-el]');
+      var detail = card.querySelector('[data-detail-el]');
+      if (!d) return;
+      var cls = LABELS[d.status] ? d.status : 'unknown';
+      pill.className = 'status-pill ' + cls;
+      pill.textContent = LABELS[cls] + (d.delayMinutes ? ' +' + d.delayMinutes + ' min' : '');
+      var bits = [];
+      if (d.actualDep) bits.push('Dep ' + d.actualDep);
+      if (d.actualArr) bits.push('Arr ' + d.actualArr);
+      if (d.gate) bits.push('Gate ' + d.gate);
+      if (d.terminal) bits.push('Terminal ' + d.terminal);
+      detail.textContent = bits.join(' · ');
+    });
+    var chip = document.getElementById('flight-age');
+    var built = chip ? chip.getAttribute('data-flight-built') : '';
+    if (chip) {
+      if (!built) {
+        chip.textContent = 'Not yet checked';
+      } else {
+        var hrs = (Date.now() - new Date(built).getTime()) / 3600000;
+        var lbl = hrs < 1 ? 'checked just now' : 'checked ' + Math.floor(hrs) + 'h ago';
+        chip.textContent = hrs < 4 ? lbl : '⚠ ' + lbl;
+        chip.className = 'section-tag ' + (hrs < 4 ? 'tag-auto' : 'tag-manual');
+      }
+    }
+  })();
 
   var banner = document.getElementById('offline-banner');
   function syncOnline(){ banner.classList.toggle('show', !navigator.onLine); }

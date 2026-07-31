@@ -5,6 +5,7 @@ Runs daily via GitHub Actions. Uses only the Python standard library.
 """
 
 import html
+import json
 import re
 import sys
 import urllib.request
@@ -215,12 +216,119 @@ def fetch_risk_level():
     return None, None
 
 
+FLIGHTS = [
+    {"num": "SN2260", "date": "2026-07-31"},
+    {"num": "SN3675", "date": "2026-07-31"},
+    {"num": "SN3676", "date": "2026-08-08"},
+    {"num": "SN2257", "date": "2026-08-08"},
+]
+FLIGHT_HOST = "aerodatabox.p.rapidapi.com"
+
+
+def fetch_flight(flight_num, date_str, key):
+    url = f"https://{FLIGHT_HOST}/flights/number/{flight_num}/{date_str}"
+    req = urllib.request.Request(url, headers={
+        "X-RapidAPI-Key": key, "X-RapidAPI-Host": FLIGHT_HOST, "User-Agent": UA,
+    })
+    with urllib.request.urlopen(req, timeout=30) as r:
+        import json
+        return json.loads(r.read())
+
+
+def normalise_flight_status(raw_status):
+    if not raw_status:
+        return "unknown"
+    s = str(raw_status).strip().lower()
+    mapping = {
+        "scheduled": "scheduled", "expected": "scheduled",
+        "on time": "ontime", "ontime": "ontime", "delayed": "delayed",
+        "departed": "departed", "en-route": "enroute", "enroute": "enroute",
+        "arrived": "landed", "landed": "landed",
+        "cancelled": "cancelled", "canceled": "cancelled", "diverted": "diverted",
+    }
+    return mapping.get(s, "unknown")
+
+
+def extract_flight(payload, flight_num):
+    candidates = payload if isinstance(payload, list) else [payload]
+    for entry in candidates:
+        num = (entry.get("number") or entry.get("flightNumber") or entry.get("callSign") or "")
+        if flight_num.replace(" ", "") not in str(num).replace(" ", "").upper():
+            continue
+        dep = entry.get("departure", {}) or {}
+        arr = entry.get("arrival", {}) or {}
+
+        def time_of(node):
+            for k in ("actualTime", "runwayTime", "estimatedTime", "scheduledTime"):
+                v = node.get(k)
+                if isinstance(v, dict):
+                    v = v.get("local") or v.get("utc")
+                if v:
+                    return str(v)[11:16]
+            return None
+
+        delay = None
+        try:
+            sched = dep.get("scheduledTime", {}).get("local")
+            actual = dep.get("actualTime", {}).get("local") or dep.get("estimatedTime", {}).get("local")
+            if sched and actual:
+                t1 = datetime.fromisoformat(sched.replace("Z", "+00:00"))
+                t2 = datetime.fromisoformat(actual.replace("Z", "+00:00"))
+                mins = int((t2 - t1).total_seconds() / 60)
+                if mins > 5:
+                    delay = mins
+        except Exception:
+            pass
+
+        return {
+            "status": normalise_flight_status(entry.get("status") or entry.get("state")),
+            "delayMinutes": delay,
+            "actualDep": time_of(dep), "actualArr": time_of(arr),
+            "gate": dep.get("gate"), "terminal": dep.get("terminal"),
+        }
+    return None
+
+
+def collect_flights():
+    """
+    Only calls the flight API on/near the two actual travel dates, to avoid
+    burning free-tier quota on the many days this script runs just for the
+    fire data. Returns {} (leaving cards as "Not yet checked") otherwise.
+    """
+    import os
+    key = os.environ.get("AERODATABOX_API_KEY", "").strip()
+    if not key:
+        print("  i no AERODATABOX_API_KEY set - flight cards stay 'not yet checked'")
+        return {}
+
+    today = datetime.now(timezone(timedelta(hours=2))).date().isoformat()
+    relevant = [f for f in FLIGHTS if f["date"] == today]
+    if not relevant:
+        print(f"  i no tracked flights on {today} - skipping flight API calls")
+        return {}
+
+    out = {}
+    for f in relevant:
+        try:
+            payload = fetch_flight(f["num"], f["date"], key)
+            result = extract_flight(payload, f["num"])
+            if result:
+                out[f["num"]] = result
+                print(f"  + flight {f['num']}: {result['status']}")
+            else:
+                print(f"  ! flight {f['num']}: no matching entry in response")
+        except Exception as e:
+            print(f"  ! flight {f['num']} fetch failed: {e}")
+    return out
+
+
 def main():
     print("Fetching feeds...")
     items = collect()
     print(f"Total: {len(items)} headlines")
 
     risk_date, risk_level = fetch_risk_level()
+    flights = collect_flights()
 
     paris = timezone(timedelta(hours=2))  # CEST; use +1 in winter
     now = datetime.now(paris)
@@ -252,6 +360,17 @@ def main():
         page = re.sub(r"<!--RISKLEVEL_START-->.*?<!--RISKLEVEL_END-->",
                       lambda _: f"<!--RISKLEVEL_START-->{risk_level}<!--RISKLEVEL_END-->",
                       page, flags=re.S)
+
+    # Flight statuses. Only stamp "flight-built" when at least one flight was
+    # actually resolved this run, so the freshness chip reflects real checks,
+    # not just the fire-data build cadence.
+    page = re.sub(r"FLIGHT_DATA_START[\s\S]*?FLIGHT_DATA_END",
+                  lambda _: f"FLIGHT_DATA_START\n    {json.dumps(flights)}\n    FLIGHT_DATA_END",
+                  page)
+    if flights:
+        page = re.sub(r'data-flight-built="[^"]*"',
+                      lambda _: f'data-flight-built="{iso}"',
+                      page)
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(page)
