@@ -1,0 +1,53 @@
+name: Update fire tracker
+
+on:
+  schedule:
+    # Every 3 hours, 06:00-21:00 Paris (CEST = UTC+2).
+    # Keeps the page close to live during the hours anyone would check it.
+    # After late October (CET = UTC+1) shift each hour up by one:
+    #   '0 5,8,11,14,17,20 * * *'
+    - cron: '0 4,7,10,13,16,19 * * *'
+  workflow_dispatch:   # lets you trigger a rebuild by hand from the Actions tab
+
+permissions:
+  contents: write
+
+# Never let two runs commit at once; a queued run just waits its turn.
+concurrency:
+  group: fire-tracker-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Rebuild page
+        env:
+          # Optional. If this secret is not set it resolves to an empty string,
+          # build.py skips the fire-danger lookup, and the page shows the level
+          # as unconfirmed rather than guessing. Nothing breaks.
+          METEOFRANCE_API_KEY: ${{ secrets.METEOFRANCE_API_KEY }}
+        run: python build.py
+
+      - name: Commit if changed
+        run: |
+          git config user.name  "fire-tracker-bot"
+          git config user.email "actions@github.com"
+          git add index.html
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Update: $(date -u '+%Y-%m-%d %H:%M UTC')"
+            # Rebase onto anything pushed while this run was working, so a
+            # manual edit to index.html cannot collide with the bot.
+            git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+            git push
+          fi
