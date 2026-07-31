@@ -184,6 +184,15 @@ def fetch_risk_level():
         print("  ! risk level response had no rows")
         return None, None
 
+    print(f"  i risk level: got {len(rows)} row(s), first row keys/sample:")
+    first = rows[0]
+    first_props = first.get("properties", first) if isinstance(first, dict) else first
+    if isinstance(first_props, dict):
+        for k, v in list(first_props.items())[:12]:
+            print(f"      {k!r}: {v!r}")
+    else:
+        print(f"      (non-dict row) {first_props!r}"[:300])
+
     def get_field(row, *names):
         for n in names:
             for k in row.keys():
@@ -201,6 +210,7 @@ def fetch_risk_level():
 
         date_val = get_field(props, "date", "datej1", "jour")
         lvl_val = get_field(props, "niveau", "niveaudanger", "niveauj1", "level", "danger")
+        print(f"  i dept-31 row found: date_field={date_val!r} level_field={lvl_val!r} (today={today})")
 
         date_str = str(date_val)[:10] if date_val else None
         try:
@@ -289,6 +299,30 @@ def extract_flight(payload, flight_num):
     return None
 
 
+def fetch_flight_with_retry(flight_num, date_str, key, attempts=3):
+    """
+    AeroDataBox's free tier rate-limits aggressively -- calling two flights
+    back-to-back can 429 the second one immediately. Retry with backoff
+    before giving up, and always sleep between calls regardless of outcome.
+    """
+    import time
+    import urllib.error
+
+    last_err = None
+    for attempt in range(attempts):
+        try:
+            return fetch_flight(flight_num, date_str, key)
+        except urllib.error.HTTPError as e:
+            last_err = e
+            if e.code == 429:
+                wait = 3 * (attempt + 1)
+                print(f"    (429 rate limited, waiting {wait}s before retry)")
+                time.sleep(wait)
+                continue
+            raise
+    raise last_err
+
+
 def collect_flights():
     """
     Only calls the flight API on/near the two actual travel dates, to avoid
@@ -296,6 +330,7 @@ def collect_flights():
     fire data. Returns {} (leaving cards as "Not yet checked") otherwise.
     """
     import os
+    import time
     key = os.environ.get("AERODATABOX_API_KEY", "").strip()
     if not key:
         print("  i no AERODATABOX_API_KEY set - flight cards stay 'not yet checked'")
@@ -308,9 +343,11 @@ def collect_flights():
         return {}
 
     out = {}
-    for f in relevant:
+    for i, f in enumerate(relevant):
+        if i > 0:
+            time.sleep(2)  # space out calls; free tier rejects rapid-fire requests
         try:
-            payload = fetch_flight(f["num"], f["date"], key)
+            payload = fetch_flight_with_retry(f["num"], f["date"], key)
             result = extract_flight(payload, f["num"])
             if result:
                 out[f["num"]] = result
