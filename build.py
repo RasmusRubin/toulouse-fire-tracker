@@ -318,24 +318,42 @@ def fetch_flight_with_retry(flight_num, date_str, key, attempts=3):
 
 def collect_flights():
     """
-    Only calls the flight API on/near the two actual travel dates, to avoid
+    Calls the live API only for flights on the actual travel date, to avoid
     burning free-tier quota on the many days this script runs just for the
-    fire data. Returns {} (leaving cards as "Not yet checked") otherwise.
+    fire data. Flights whose date has already passed are marked "landed"
+    directly, with no API call: by the time this script next runs, a
+    past-dated scheduled flight is certain to have landed, so there's
+    nothing to "check" -- and AeroDataBox's free tier doesn't reliably
+    backfill old flights anyway. Future flights are left out of the dict
+    entirely, so their cards keep the static "Not yet checked" markup
+    until their travel day arrives.
     """
     import os
     import time
     key = os.environ.get("AERODATABOX_API_KEY", "").strip()
-    if not key:
-        print("  i no AERODATABOX_API_KEY set - flight cards stay 'not yet checked'")
-        return {}
 
     today = datetime.now(timezone(timedelta(hours=2))).date().isoformat()
+
+    out = {}
+    for f in FLIGHTS:
+        if f["date"] < today:
+            out[f["num"]] = {
+                "status": "landed",
+                "delayMinutes": None,
+                "actualDep": None, "actualArr": None,
+                "gate": None, "terminal": None,
+            }
+            print(f"  + flight {f['num']}: past date ({f['date']}) - marked landed, no API call")
+
+    if not key:
+        print("  i no AERODATABOX_API_KEY set - today's/future flight cards stay 'not yet checked'")
+        return out
+
     relevant = [f for f in FLIGHTS if f["date"] == today]
     if not relevant:
         print(f"  i no tracked flights on {today} - skipping flight API calls")
-        return {}
+        return out
 
-    out = {}
     for i, f in enumerate(relevant):
         if i > 0:
             time.sleep(2)  # space out calls; free tier rejects rapid-fire requests
