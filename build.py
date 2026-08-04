@@ -219,6 +219,65 @@ def fetch_risk_level():
     return None, None
 
 
+RISK_CACHE_PATH = "risk_cache.json"
+
+
+def load_cached_risk():
+    """
+    Returns (date_iso, level) from risk_cache.json if present and readable,
+    else (None, None). Never raises -- a missing or corrupt cache file just
+    means we fall through to a live API fetch, same as before this cache
+    existed.
+    """
+    try:
+        with open(RISK_CACHE_PATH, encoding="utf-8") as f:
+            data = json.load(f)
+        return data.get("date"), data.get("level")
+    except Exception:
+        return None, None
+
+
+def save_cached_risk(date_iso, level):
+    try:
+        with open(RISK_CACHE_PATH, "w", encoding="utf-8") as f:
+            json.dump({"date": date_iso, "level": level}, f)
+    except Exception as e:
+        print(f"  ! could not write risk cache: {e}")
+
+
+def get_risk_level():
+    """
+    Meteo-France's "encours" endpoint only ever exposes forecasts for J1
+    (tomorrow) and J2 (day after) relative to whenever the bulletin was
+    last issued -- it never re-exposes "today's" level once today's own
+    bulletin has been issued and superseded yesterday's. That means the
+    only window in which today's level is fetchable live is between
+    yesterday's bulletin and today's -- once that closes, no amount of
+    re-running this script can recover it from the API, because
+    Meteo-France itself no longer serves it.
+
+    To stop a same-day rebuild after that window from being stuck showing
+    "unconfirmed" for the rest of the day, we cache the first successful
+    same-day confirmation to disk (risk_cache.json, committed alongside
+    index.html) and prefer that cache over a fresh API call whenever it's
+    already dated today. One successful run anywhere in the pre-flip
+    window -- scheduled or manual -- is then enough to keep every later
+    rebuild that day (any time, any number of times) showing a confirmed
+    level, with no live API dependency for the rest of the day.
+    """
+    today = datetime.now(timezone(timedelta(hours=2))).date().isoformat()
+
+    cached_date, cached_level = load_cached_risk()
+    if cached_date == today and cached_level:
+        print(f"  i risk level already confirmed earlier today (cached): {cached_level}")
+        return cached_date, cached_level
+
+    risk_date, risk_level = fetch_risk_level()
+    if risk_date == today and risk_level:
+        save_cached_risk(risk_date, risk_level)
+    return risk_date, risk_level
+
+
 FLIGHTS = [
     {"num": "SN2260", "date": "2026-07-31"},
     {"num": "SN3675", "date": "2026-07-31"},
@@ -375,7 +434,7 @@ def main():
     items = collect()
     print(f"Total: {len(items)} headlines")
 
-    risk_date, risk_level = fetch_risk_level()
+    risk_date, risk_level = get_risk_level()
     flights = collect_flights()
 
     paris = timezone(timedelta(hours=2))  # CEST; use +1 in winter
