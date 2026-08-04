@@ -47,6 +47,7 @@ jobs:
           git config user.name  "fire-tracker-bot"
           git config user.email "actions@github.com"
           git add index.html
+          [ -f risk_cache.json ] && git add risk_cache.json
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
